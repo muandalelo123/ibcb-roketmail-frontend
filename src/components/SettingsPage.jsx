@@ -21,53 +21,66 @@
 import React, { useEffect, useMemo, useState } from "react";
 import SettingsGeneral from "./SettingsGeneral";
 import EmailSettingsForm from "./EmailSettingsForm";
-import { getGeneralSettings } from "../api";
+import { getGeneralSettings, loadApiKey } from "../api";
+
 
 const TABS = [
   { id: "email", label: "Configuration Email" },
   { id: "general", label: "Préférences & Profil" },
 ];
 
+
 function ApiKeyBanner({ apiKey }) {
   const hasApiKey = Boolean(apiKey && apiKey.trim());
+
   if (hasApiKey) return null;
 
   return (
     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
       <div className="font-medium">API key manquante</div>
       <div className="mt-1 text-amber-800">
-        Ajoute ta clé dans{" "}
-        <code className="px-1 rounded bg-amber-100">localStorage</code> :{" "}
-        <code className="ml-2 px-1 rounded bg-amber-100">apiKey</code>
-      </div>
-      <div className="mt-2 text-xs text-amber-700">
-        Exemple (DevTools Console):{" "}
-        <code className="px-1 rounded bg-amber-100">
-          localStorage.setItem("apiKey","TA_CLE")
-        </code>
+        Vérifie qu’une clé API RoketMail est enregistrée dans ce navigateur.
       </div>
     </div>
   );
 }
 
+
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("email");
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem("apiKey") || "");
+
+  const [apiKey, setApiKey] = useState(() => loadApiKey());
+
+
 
   // Cross-tabs
-  useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key === "apiKey") setApiKey(e.newValue || "");
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  // src/components/SettingsPage.jsx
+
+useEffect(() => {
+  const onStorage = (e) => {
+    if (e.key === "rocketmail_apiKey") {
+      setApiKey(e.newValue || "");
+    }
+  };
+
+  window.addEventListener("storage", onStorage);
+
+  return () => {
+    window.removeEventListener("storage", onStorage);
+  };
+}, []);
+
+
 
   // Same-tab (polling léger)
   useEffect(() => {
-    let last = localStorage.getItem("apiKey") || "";
-    const t = setInterval(() => {
-      const cur = localStorage.getItem("apiKey") || "";
+
+    let last = loadApiKey();
+
+  const t = setInterval(() => {
+  const cur = loadApiKey();
+
+
       if (cur !== last) {
         last = cur;
         setApiKey(cur);
@@ -110,6 +123,8 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
+
+
       <ApiKeyBanner apiKey={apiKeyTrim} />
 
       {pingError && (
@@ -117,6 +132,8 @@ export default function SettingsPage() {
           {pingError}
         </div>
       )}
+
+
 
       <div className="flex gap-2 border-b border-slate-200">
         {TABS.map((t) => (

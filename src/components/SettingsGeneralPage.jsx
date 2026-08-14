@@ -2,7 +2,16 @@
 
 // src/components/SettingsGeneralPage.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { getGeneralSettings, updateGeneralSettings } from "../api";
+
+// src/components/SettingsGeneralPage.jsx
+
+import {
+  getGeneralSettings,
+  updateGeneralSettings,
+  loadApiKey,
+} from "../api";
+
+
 import { useAbortableEffect } from "../hooks/useAbortableEffect";
 
 /**
@@ -47,7 +56,9 @@ function normalizeToApi(form) {
 }
 
 export default function SettingsGeneralPage({ apiKey: apiKeyProp }) {
-  const [apiKeyState] = useState(() => localStorage.getItem("apiKey") || "");
+
+  const [apiKeyState] = useState(() => loadApiKey());
+
   const apiKey = apiKeyProp ?? apiKeyState;
 
   const hasApiKey = useMemo(() => Boolean(apiKey && apiKey.trim()), [apiKey]);
@@ -73,7 +84,12 @@ export default function SettingsGeneralPage({ apiKey: apiKeyProp }) {
       if (!hasApiKey) {
         if (!isActive()) return;
         setLoading(false);
-        setError("API key manquante. Ajoute ta clé dans localStorage: apiKey");
+
+        setError(
+                "API key manquante. Vérifie la clé API RoketMail enregistrée dans ce navigateur."
+);
+
+
         return;
       }
 

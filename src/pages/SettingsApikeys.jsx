@@ -1,7 +1,7 @@
 
 
 // src/pages/SettingsApiKeys.jsx
-
+import { loadToken } from "../api";
 import { useEffect, useState } from "react";
 import {
   setApiKey,
@@ -25,7 +25,9 @@ export default function SettingsApiKeys() {
   const storedPrefix = getStoredApiKeyPrefix();
 
   // Si tu utilises un token simple pour l'admin (auth/login)
-  const authToken = localStorage.getItem("access_token"); // ex: "simple-backend-token"
+
+  const authToken = loadToken();
+
 
   // Charger la liste des clés existantes
   async function fetchApiKeys() {

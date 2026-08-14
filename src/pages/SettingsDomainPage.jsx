@@ -2,20 +2,13 @@
 // src/pages/SettingsDomainPage.jsx
 // src/pages/SettingsDomainPage.jsx
 import { useEffect, useState } from "react";
+import { loadApiKey } from "../api";
+
 
 // ⚙️ à adapter pour utiliser la même logique que SettingsGeneralPage
 const API_BASE_URL = "http://localhost:8000";
 
 // même endroit que pour General / SMTP : soit constante, soit localStorage
-function getApiKey() {
-  // si tu stockes la clé dans localStorage
-  const stored = localStorage.getItem("ibcb_api_key");
-  if (stored) return stored;
-
-  // sinon, remplace par la même constante que dans SettingsGeneralPage/SettingsPage
-  // ex: return import.meta.env.VITE_API_KEY;
-  return "TA_CLE_API_ICI"; // à remplacer
-}
 
 function StatusBadge({ status }) {
   const isOk = status === "Configured";
@@ -35,6 +28,7 @@ function StatusBadge({ status }) {
 }
 
 export default function SettingsDomainPage() {
+  const apiKey = loadApiKey();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -45,7 +39,7 @@ export default function SettingsDomainPage() {
         const res = await fetch(`${API_BASE_URL}/settings/domain-status`, {
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": getApiKey(),   // 🔑 même logique que General / SMTP
+           "x-api-key": apiKey,   // 🔑 même logique que General / SMTP
           },
         });
 

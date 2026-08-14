@@ -5,6 +5,19 @@
 // src/App.jsx
 // src/App.jsx
 
+import TrackingLinkCreate from "./components/TrackingLinkCreate";
+import TrackingVariantCreate from "./components/TrackingVariantCreate";
+import TrackingStats from "./components/TrackingStats";
+
+import {
+  getContactsList,
+  exportContactsCsv,
+} from "./api/contacts";
+
+import { getLogs } from "./api/logs";
+
+import CampaignsOverview from "./components/CampaignsOverview";
+
 import React, { useEffect, useState } from "react";
 import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { getCampaigns } from "./api/campaigns";
@@ -173,18 +186,80 @@ function DashboardPage({ campaigns, selectedCampaignId, setSelectedCampaignId })
   );
 }
 
-function CampaignsPage() {
+function CampaignsPage({ campaigns }) {
   return (
-    <div className="space-y-2">
-      <h1 className="text-lg font-semibold tracking-tight">Campaigns</h1>
-      <p className="text-xs text-slate-500">
-        List of campaigns and their aggregated stats.
-      </p>
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-lg font-semibold tracking-tight">
+          Campaigns
+        </h1>
+        <p className="text-xs text-slate-500">
+          List of campaigns and their aggregated stats.
+        </p>
+      </div>
+
+      <Card>
+        <CampaignsOverview campaigns={campaigns} />
+      </Card>
     </div>
   );
 }
 
+
+
+// src/App.jsx
+
 function ContactsPage() {
+  const [contacts, setContacts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function loadContacts() {
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = await getContactsList();
+      setContacts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+      setError(err?.message || "Unable to load contacts.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleExport() {
+    setExporting(true);
+    setError("");
+
+    try {
+      const { blob, filename } = await exportContactsCsv();
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = filename;
+
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      setError(err?.message || "Unable to export contacts.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  useEffect(() => {
+    loadContacts();
+  }, []);
+
   return (
     <div className="space-y-4">
       <div>
@@ -194,42 +269,101 @@ function ContactsPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <h2 className="text-sm font-semibold mb-2">Contacts list</h2>
-          <p className="text-xs text-slate-500 mb-3">
-            This section will display your contacts from the backend.
-          </p>
+      {error && (
+        <div className="px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
-          <div className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-            Table to connect later with GET /contacts
+      <div className="grid gap-4 md:grid-cols-[minmax(0,1.7fr),minmax(0,1fr)]">
+        <Card>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-sm font-semibold">Contacts list</h2>
+              <p className="text-xs text-slate-500">
+                {contacts.length} contact(s)
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={loadContacts}
+              disabled={loading}
+              className="px-3 py-2 rounded-md border border-slate-300 text-sm bg-white hover:bg-slate-50 disabled:opacity-60"
+            >
+              {loading ? "Refreshing..." : "Refresh"}
+            </button>
           </div>
+
+          {contacts.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+              {loading ? "Loading contacts..." : "No contacts available."}
+            </div>
+          ) : (
+            <div className="max-h-[420px] overflow-y-auto overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left">
+                    <th className="py-2 pr-3">ID</th>
+                    <th className="py-2 pr-3">Email</th>
+                    <th className="py-2 pr-3">First name</th>
+                    <th className="py-2 pr-3">Last name</th>
+                    <th className="py-2 pr-3">Language</th>
+                    <th className="py-2">Created</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {contacts.map((contact) => (
+                    <tr
+                      key={contact.id}
+                      className="border-b last:border-b-0"
+                    >
+                      <td className="py-2 pr-3">#{contact.id}</td>
+
+                      <td className="py-2 pr-3">
+                        {contact.email}
+                      </td>
+
+                      <td className="py-2 pr-3">
+                        {contact.first_name || "-"}
+                      </td>
+
+                      <td className="py-2 pr-3">
+                        {contact.last_name || "-"}
+                      </td>
+
+                      <td className="py-2 pr-3">
+                        {contact.language || "-"}
+                      </td>
+
+                      <td className="py-2 whitespace-nowrap">
+                        {contact.created_at
+                          ? new Date(contact.created_at).toLocaleString()
+                          : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
 
         <Card>
           <h2 className="text-sm font-semibold mb-2">Import / Export</h2>
-          <p className="text-xs text-slate-500 mb-3">
-            Import contacts from CSV and export your audience.
-          </p>
 
           <div className="space-y-3">
             <ContactImport />
 
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="px-3 py-2 rounded-md border border-slate-300 text-sm bg-white hover:bg-slate-50"
-              >
-                Refresh Contacts
-              </button>
-
-              <button
-                type="button"
-                className="px-3 py-2 rounded-md border border-slate-300 text-sm bg-white hover:bg-slate-50"
-              >
-                Export CSV
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={exporting}
+              className="w-full px-3 py-2 rounded-md border border-slate-300 text-sm bg-white hover:bg-slate-50 disabled:opacity-60"
+            >
+              {exporting ? "Exporting..." : "Export CSV"}
+            </button>
           </div>
         </Card>
       </div>
@@ -247,64 +381,256 @@ function ContactsUploadPage() {
   );
 }
 
+// src/App.jsx
+
 function LogsPage() {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function loadLogs() {
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = await getLogs(200);
+      setLogs(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+      setError(err?.message || "Unable to load logs.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadLogs();
+  }, []);
+
   return (
-    <div className="space-y-2">
-      <h1 className="text-lg font-semibold tracking-tight">Logs</h1>
-      <p className="text-xs text-slate-500">
-        Global sending log, linked to your FastAPI backend.
-      </p>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight">Logs</h1>
+          <p className="text-xs text-slate-500">
+            Global sending log from the FastAPI backend.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={loadLogs}
+          disabled={loading}
+          className="px-3 py-2 rounded-lg border text-sm bg-white hover:bg-slate-50 disabled:opacity-60"
+        >
+          {loading ? "Refreshing..." : "Refresh"}
+        </button>
+      </div>
+
+      {error && (
+        <div className="px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <Card>
+        {logs.length === 0 ? (
+          <div className="text-sm text-slate-500">
+            {loading ? "Loading logs..." : "No logs available."}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left">
+                  <th className="py-2 pr-3">Job</th>
+                  <th className="py-2 pr-3">Campaign</th>
+                  <th className="py-2 pr-3">Recipient</th>
+                  <th className="py-2 pr-3">Provider</th>
+                  <th className="py-2 pr-3">State</th>
+                  <th className="py-2 pr-3">Sent at</th>
+                  <th className="py-2">Error</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.job_id} className="border-b last:border-b-0">
+                    <td className="py-2 pr-3">
+                      #{log.job_id}
+                    </td>
+
+                    <td className="py-2 pr-3">
+                      <div className="font-medium">
+                        #{log.campaign_id}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {log.campaign_subject || "-"}
+                      </div>
+                    </td>
+
+                    <td className="py-2 pr-3">
+                      {log.email || "-"}
+                    </td>
+
+                    <td className="py-2 pr-3">
+                      {log.provider || "-"}
+                    </td>
+
+                    <td className="py-2 pr-3">
+                      {log.state || "-"}
+                    </td>
+
+                    <td className="py-2 pr-3 whitespace-nowrap">
+                      {log.sent_at
+                        ? new Date(log.sent_at).toLocaleString()
+                        : "-"}
+                    </td>
+
+                    <td className="py-2">
+                      {log.error_message ? (
+                        <span className="text-red-700">
+                          {log.error_message}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
 
-function TrackingPage() {
+
+
+function TrackingPage({ campaigns }) {
+
+ const TRACKING_CAMPAIGN_KEY = "rocketmail_tracking_campaign_id";
+ const [campaignId, setCampaignId] = useState(
+  () => localStorage.getItem(TRACKING_CAMPAIGN_KEY) || ""
+);
+
+  const [lastCreatedLinkId, setLastCreatedLinkId] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+  if (!campaigns.length) return;
+
+  const exists = campaigns.some(
+    (campaign) => String(campaign.id) === String(campaignId)
+  );
+
+  if (campaignId && exists) return;
+
+  const defaultId = String(campaigns[0].id);
+
+  setCampaignId(defaultId);
+  localStorage.setItem(TRACKING_CAMPAIGN_KEY, defaultId);
+}, [campaigns, campaignId]);
+
+  const selectedCampaignId =
+    campaignId === "" ? null : Number(campaignId);
+
+  function handleLinkCreated(link) {
+    if (link?.link_id != null) {
+      setLastCreatedLinkId(link.link_id);
+      setRefreshKey((prev) => prev + 1);
+    }
+  }
+
+  function handleVariantCreated() {
+    setRefreshKey((prev) => prev + 1);
+  }
+
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-lg font-semibold tracking-tight">Tracking</h1>
         <p className="text-xs text-slate-500">
-          Manage campaign links, rotator variants, and click analytics.
+          Manage campaign links, variants, and click analytics.
         </p>
       </div>
 
+      <Card>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium">
+            Campaign
+          </label>
+
+          <select>
+            className="w-full border rounded-lg px-3 py-2"
+            value={campaignId}
+
+            onChange={(e) => {
+  const value = e.target.value;
+
+  setCampaignId(value);
+  setLastCreatedLinkId(null);
+
+  if (value) {
+    localStorage.setItem(TRACKING_CAMPAIGN_KEY, value);
+  } else {
+    localStorage.removeItem(TRACKING_CAMPAIGN_KEY);
+  }
+}}
+
+
+            <option value="">Select a campaign</option>
+
+            {campaigns.map((campaign) => (
+              <option key={campaign.id} value={campaign.id}>
+                #{campaign.id} - {campaign.subject}
+              </option>
+            ))}
+          </select>
+
+        </div>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <h2 className="text-sm font-semibold mb-2">Campaign links</h2>
-          <p className="text-xs text-slate-500 mb-3">
-            Create tracked links for a selected campaign.
-          </p>
+          <h2 className="text-sm font-semibold mb-3">
+            Campaign links
+          </h2>
 
-          <div className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-            Form to connect later with POST /campaigns/{`{campaign_id}`}/links
-          </div>
+          <TrackingLinkCreate
+            campaignId={selectedCampaignId}
+            onCreated={handleLinkCreated}
+          />
         </Card>
 
         <Card>
-          <h2 className="text-sm font-semibold mb-2">Rotator / Variants</h2>
-          <p className="text-xs text-slate-500 mb-3">
-            Add link variants and control traffic distribution by weight.
-          </p>
+          <h2 className="text-sm font-semibold mb-3">
+            Rotator / Variants
+          </h2>
 
-          <div className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-            Form to connect later with POST /links/{`{link_id}`}/variants
-          </div>
-        </Card>
-
-        <Card>
-          <h2 className="text-sm font-semibold mb-2">Click analytics</h2>
-          <p className="text-xs text-slate-500 mb-3">
-            View clicks per campaign and per variant.
-          </p>
-
-          <div className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-            Stats to connect later with GET /campaigns/{`{campaign_id}`}/clicks
-          </div>
+          <TrackingVariantCreate
+            linkId={lastCreatedLinkId}
+            onCreated={handleVariantCreated}
+          />
         </Card>
       </div>
+
+      <Card>
+        <h2 className="text-sm font-semibold mb-3">
+          Click analytics
+        </h2>
+
+        <TrackingStats
+          campaignId={selectedCampaignId}
+          refreshKey={refreshKey}
+        />
+      </Card>
     </div>
   );
 }
+
 
 function CreateCampaignPage({ onCreated }) {
   return (
@@ -393,9 +719,18 @@ useEffect(() => {
 
         <Route path="/contacts" element={<ContactsPage />} />
         <Route path="/contacts/upload" element={<ContactsUploadPage />} />
-        <Route path="/campaigns" element={<CampaignsPage />} />
+
+        <Route
+               path="/campaigns"
+               element={<CampaignsPage campaigns={campaigns} />}
+/>
+
         <Route path="/logs" element={<LogsPage />} />
-        <Route path="/tracking" element={<TrackingPage />} />
+
+        <Route
+          path="/tracking"
+          element={<TrackingPage campaigns={campaigns} />}
+        />
 
         <Route path="/settings/general" element={<SettingsGeneralPage />} />
         <Route path="/settings" element={<SettingsPage />} />
