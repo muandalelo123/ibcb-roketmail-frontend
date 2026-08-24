@@ -5,9 +5,13 @@
 // src/App.jsx
 // src/App.jsx
 
+import FunnelPageGenerator from "./components/FunnelPageGenerator";
+
 import TrackingLinkCreate from "./components/TrackingLinkCreate";
 import TrackingVariantCreate from "./components/TrackingVariantCreate";
 import TrackingStats from "./components/TrackingStats";
+
+import FunnelsPage from "./components/FunnelsPage";
 
 import {
   getContactsList,
@@ -54,6 +58,8 @@ function AppLayout({ children, onLogout }) {
     { to: "/campaigns/create", label: "New Campaign" },
     { to: "/contacts", label: "Contacts" },
     { to: "/campaigns", label: "Campaigns" },
+    { to: "/funnels", label: "Funnels" },
+    { to: "/funnels/page-generator", label: "Page Generator" },
     { to: "/logs", label: "Logs" },
     { to: "/tracking", label: "Tracking" },
     { to: "/settings/general", label: "Settings (General)" },
@@ -74,8 +80,13 @@ function AppLayout({ children, onLogout }) {
         <nav className="flex-1 px-2 py-3 space-y-1 text-sm">
           {links.map((link) => {
             const isActive =
-              location.pathname === link.to ||
-              (link.to !== "/" && location.pathname.startsWith(link.to));
+              link.to === "/"
+                ? location.pathname === "/"
+                : link.to === "/funnels"
+                ? location.pathname === "/funnels"
+                : location.pathname === link.to ||
+                  location.pathname.startsWith(`${link.to}/`);
+
 
             return (
               <button
@@ -723,7 +734,15 @@ useEffect(() => {
         <Route
                path="/campaigns"
                element={<CampaignsPage campaigns={campaigns} />}
+        />
+
+        <Route path="/funnels" element={<FunnelsPage />} />
+
+        <Route
+          path="/funnels/page-generator"
+          element={<FunnelPageGenerator />}
 />
+
 
         <Route path="/logs" element={<LogsPage />} />
 
