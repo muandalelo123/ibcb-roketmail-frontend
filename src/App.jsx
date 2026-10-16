@@ -197,7 +197,7 @@ function DashboardPage({ campaigns, selectedCampaignId, setSelectedCampaignId })
   );
 }
 
-function CampaignsPage({ campaigns }) {
+function CampaignsPage({ campaigns, onChanged }) {
   return (
     <div className="space-y-4">
       <div>
@@ -210,7 +210,7 @@ function CampaignsPage({ campaigns }) {
       </div>
 
       <Card>
-        <CampaignsOverview campaigns={campaigns} />
+        <CampaignsOverview campaigns={campaigns} onChanged={onChanged} />
       </Card>
     </div>
   );
@@ -574,24 +574,21 @@ function TrackingPage({ campaigns }) {
             Campaign
           </label>
 
-          <select>
+          <select
             className="w-full border rounded-lg px-3 py-2"
             value={campaignId}
-
             onChange={(e) => {
-  const value = e.target.value;
+              const value = e.target.value;
+              setCampaignId(value);
+              setLastCreatedLinkId(null);
 
-  setCampaignId(value);
-  setLastCreatedLinkId(null);
-
-  if (value) {
-    localStorage.setItem(TRACKING_CAMPAIGN_KEY, value);
-  } else {
-    localStorage.removeItem(TRACKING_CAMPAIGN_KEY);
-  }
-}}
-
-
+              if (value) {
+                localStorage.setItem(TRACKING_CAMPAIGN_KEY, value);
+              } else {
+                localStorage.removeItem(TRACKING_CAMPAIGN_KEY);
+              }
+            }}
+          >
             <option value="">Select a campaign</option>
 
             {campaigns.map((campaign) => (
@@ -690,6 +687,15 @@ useEffect(() => {
 
 
 
+  function handleCampaignChanged(campaign) {
+    setCampaigns((previous) => {
+      const remaining = previous.filter(
+        (item) => item.id !== campaign.id
+      );
+      return [campaign, ...remaining].sort((a, b) => b.id - a.id);
+    });
+  }
+
   function handleCampaignCreated(campaign) {
     setCampaigns((prev) => [...prev, campaign]);
     if (campaign && campaign.id != null) setSelectedCampaignId(campaign.id);
@@ -733,7 +739,7 @@ useEffect(() => {
 
         <Route
                path="/campaigns"
-               element={<CampaignsPage campaigns={campaigns} />}
+               element={<CampaignsPage campaigns={campaigns} onChanged={handleCampaignChanged} />}
         />
 
         <Route path="/funnels" element={<FunnelsPage />} />

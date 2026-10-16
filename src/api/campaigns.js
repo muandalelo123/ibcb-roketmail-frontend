@@ -95,3 +95,65 @@ export async function getCampaignStatus(campaignId, { token, apiKey, signal } = 
     signal,
   });
 }
+
+
+/**
+ * GET /campaigns/{campaignId}
+ */
+export async function getCampaignDetail(
+  campaignId,
+  { token, apiKey, signal } = {}
+) {
+  if (campaignId == null) throw new Error("campaignId manquant.");
+
+  return request(
+    `/campaigns/${encodeURIComponent(String(campaignId))}`,
+    {
+      method: "GET",
+      ...authHeaders({ token, apiKey }),
+      signal,
+    }
+  );
+}
+
+/**
+ * PUT /campaigns/{campaignId}
+ * Enregistre le contenu sans envoyer.
+ */
+export async function updateCampaign(
+  campaignId,
+  { subject, html, from_code },
+  { token, apiKey, signal } = {}
+) {
+  if (campaignId == null) throw new Error("campaignId manquant.");
+
+  return request(
+    `/campaigns/${encodeURIComponent(String(campaignId))}`,
+    {
+      method: "PUT",
+      ...authHeaders({ token, apiKey }),
+      body: { subject, html, from_code },
+      signal,
+    }
+  );
+}
+
+/**
+ * POST /campaigns/{campaignId}/duplicate
+ * Copie le contenu sans copier les destinataires ni envoyer.
+ */
+export async function duplicateCampaign(
+  campaignId,
+  { token, apiKey, signal } = {}
+) {
+  if (campaignId == null) throw new Error("campaignId manquant.");
+
+  return request(
+    `/campaigns/${encodeURIComponent(String(campaignId))}/duplicate`,
+    {
+      method: "POST",
+      ...authHeaders({ token, apiKey }),
+      signal,
+    }
+  );
+}

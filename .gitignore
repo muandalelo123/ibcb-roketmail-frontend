@@ -3,3 +3,7 @@ dist/
 .env
 .env.*
 .DS_Store
+
+# Local configuration and generated files
+!.env.example
+*.bak_*

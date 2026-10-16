@@ -238,6 +238,184 @@ export default function CampaignCreate({ onCreated }) {
           </div>
         </div>
 
+
+         {/* Audience targeting — pending implementation */}
+        <section
+          aria-labelledby="audience-title"
+          className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-4"
+        >
+          <div>
+            <h3
+              id="audience-title"
+              className="text-base font-semibold text-slate-900"
+            >
+              Audience & recipients
+            </h3>
+
+            <span className="inline-block mt-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
+              À connecter au backend
+            </span>
+
+            <p
+              id="audience-status"
+              className="mt-2 text-sm text-slate-600"
+            >
+              Le ciblage sera disponible ici. Ces options sont
+              désactivées et ne sont pas enregistrées avec la campagne.
+            </p>
+          </div>
+
+          <fieldset
+            disabled
+            aria-describedby="audience-status"
+            className="space-y-4"
+          >
+            <legend className="sr-only">
+              Future recipient selection options
+            </legend>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label
+                  htmlFor="audience-segment"
+                  className="block text-sm font-medium"
+                >
+                  Segment / group
+                </label>
+                <select
+                  id="audience-segment"
+                  defaultValue=""
+                  className="w-full border rounded-lg px-3 py-2 bg-white disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    Segments à charger
+                  </option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label
+                  htmlFor="audience-batch"
+                  className="block text-sm font-medium"
+                >
+                  Import batch — optional
+                </label>
+                <select
+                  id="audience-batch"
+                  defaultValue=""
+                  className="w-full border rounded-lg px-3 py-2 bg-white disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    Lots à charger
+                  </option>
+                </select>
+                <p className="text-xs text-slate-500">
+                  Exemple de lot à proposer : babycare_import_97.
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <label
+                  htmlFor="audience-limit"
+                  className="block text-sm font-medium"
+                >
+                  Maximum recipients
+                </label>
+                <select
+                  id="audience-limit"
+                  defaultValue="10"
+                  className="w-full border rounded-lg px-3 py-2 bg-white disabled:cursor-not-allowed"
+                >
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                  <option value="custom">Custom number</option>
+                  <option value="all">All eligible contacts</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label
+                  htmlFor="audience-custom-limit"
+                  className="block text-sm font-medium"
+                >
+                  Custom maximum
+                </label>
+                <input
+                  id="audience-custom-limit"
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="e.g. 25"
+                  className="w-full border rounded-lg px-3 py-2 bg-white disabled:cursor-not-allowed"
+                />
+              </div>
+
+              <div className="space-y-1 md:col-span-2">
+                <label
+                  htmlFor="audience-order"
+                  className="block text-sm font-medium"
+                >
+                  Selection order
+                </label>
+                <select
+                  id="audience-order"
+                  defaultValue="oldest_signup"
+                  className="w-full border rounded-lg px-3 py-2 bg-white disabled:cursor-not-allowed"
+                >
+                  <option value="oldest_signup">
+                    Oldest signup first
+                  </option>
+                  <option value="newest_signup">
+                    Newest signup first
+                  </option>
+                </select>
+                <p className="text-xs text-slate-500">
+                  Utiliser la date réelle d’inscription au formulaire.
+                  Sa récupération reste à connecter.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium">
+                Exclusions prévues
+              </p>
+
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" defaultChecked />
+                Contacts désabonnés
+              </label>
+
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" defaultChecked />
+                Contacts ayant déjà reçu ce message de suivi
+              </label>
+
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" defaultChecked />
+                Contacts dont ce message est en attente ou en cours
+              </label>
+            </div>
+
+            <div className="rounded-lg border bg-white p-3 space-y-3">
+              <p className="text-sm text-slate-600">
+                Admissibles : non calculé · Sélectionnés : non calculé
+              </p>
+
+              <button
+                type="button"
+                className="rounded-lg border px-3 py-2 text-sm text-slate-500 cursor-not-allowed"
+              >
+                Preview recipients — unavailable
+              </button>
+            </div>
+          </fieldset>
+        </section>
+
+
+
+
         {/* Email editor */}
         <EmailEditor
           value={html}
